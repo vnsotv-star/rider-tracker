@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="lo">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ບັນທຶກລາຍໄດ້ ໄລເດີ</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f6f4f5;--card:#fff;--tx:#1f1a1c;--mu:#7a7276;--pk:#d70f64;--gr:#0f9d58;--rd:#d93025;--bd:#e8e3e5}
+@media (prefers-color-scheme:dark){:root{--bg:#161214;--card:#221c1f;--tx:#f3eef0;--mu:#a69ca1;--pk:#ff4d94;--gr:#4cd68a;--rd:#ff7a70;--bd:#352d31}}
+*,*:before,*:after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,sans-serif;line-height:1.5}
+.w{max-width:520px;margin:0 auto;padding:16px}
+h1{font-size:20px;margin:4px 0 14px;color:var(--pk)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:14px}
+.hero{background:var(--pk);color:#fff;border:0}
+.hero small{opacity:.85}.hero .big{font-size:30px;font-weight:700}
+.row{display:flex;gap:10px}.row>*{flex:1}
+.tabs{display:flex;gap:6px;margin-bottom:12px}
+.tabs button{flex:1;padding:8px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);font:inherit;font-size:14px}
+.tabs button.on{background:var(--pk);color:#fff;border-color:var(--pk)}
+label{display:block;font-size:13px;color:var(--mu);margin:8px 0 3px}
+input{width:100%;padding:10px;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);font:inherit;font-size:16px}
+.btn{width:100%;margin-top:14px;padding:12px;border:0;border-radius:12px;background:var(--pk);color:#fff;font:inherit;font-weight:600;font-size:16px}
+.pv{margin-top:10px;font-size:15px;text-align:center}
+.g{color:var(--gr)}.r{color:var(--rd)}.m{color:var(--mu);font-size:13px}
+.it{padding:10px 0;border-bottom:1px solid var(--bd)}.it:last-child{border:0}
+.it .t{display:flex;justify-content:space-between;font-weight:600}
+.x{background:none;border:0;color:var(--rd);font:inherit;font-size:13px;padding:0}
+.s2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.s2 div{background:var(--bg);border-radius:10px;padding:10px}.s2 b{display:block;font-size:17px}
+</style>
+</head>
+<body>
+<div class="w">
+<h1>🛵 ບັນທຶກຕົ້ນທຶນ &amp; ກຳໄລ ໄລເດີ</h1>
+<div class="card hero">
+  <small id="hl">ກຳໄລເດືອນນີ້</small>
+  <div class="big" id="hp">0 ₭</div>
+  <small id="hs"></small>
+</div>
+<div class="card">
+  <b>ເພີ່ມຂໍ້ມູນມື້ນີ້</b>
+  <label>ວັນທີ</label><input type="date" id="d">
+  <div class="row">
+    <div><label>ລາຍຮັບ (₭)</label><input type="number" inputmode="numeric" id="inc" placeholder="0"></div>
+    <div><label>ຈຳນວນອໍເດີ</label><input type="number" inputmode="numeric" id="ord" placeholder="0"></div>
+  </div>
+  <div class="row">
+    <div><label>ຄ່ານ້ຳມັນ (₭)</label><input type="number" inputmode="numeric" id="fuel" placeholder="0"></div>
+    <div><label>ໄລຍະທາງ (ກມ)</label><input type="number" inputmode="decimal" id="km" placeholder="0"></div>
+  </div>
+  <div class="row">
+    <div><label>ຄ່າບຳລຸງຮັກສາ (₭)</label><input type="number" inputmode="numeric" id="mt" placeholder="0"></div>
+    <div><label>ອື່ນໆ: ເນັດ, ອາຫານ (₭)</label><input type="number" inputmode="numeric" id="ot" placeholder="0"></div>
+  </div>
+  <div class="pv" id="pv"></div>
+  <button class="btn" id="add">ບັນທຶກ</button>
+</div>
+<div class="tabs">
+  <button data-p="day">ມື້ນີ້</button>
+  <button data-p="week">7 ວັນ</button>
+  <button data-p="month" class="on">ເດືອນນີ້</button>
+  <button data-p="all">ທັງໝົດ</button>
+</div>
+<div class="card"><div class="s2" id="sum"></div></div>
+<div class="card"><b>ປະຫວັດ</b><div id="list"></div></div>
+<p class="m" style="text-align:center">ຂໍ້ມູນເກັບໄວ້ໃນເຄື່ອງນີ້ເທົ່ານັ້ນ</p>
+</div>
+<script>
+const K='rider-tracker-v1';
+let data=[],per='month';
+try{data=JSON.parse(localStorage.getItem(K)||'[]')||[]}catch(e){data=[]}
+const $=id=>document.getElementById(id);
+const n=id=>parseFloat($(id).value)||0;
+const f=v=>Math.round(v).toLocaleString('en-US')+' ₭';
+const iso=d=>{const z=new Date(d.getTime()-d.getTimezoneOffset()*6e4);return z.toISOString().slice(0,10)};
+$('d').value=iso(new Date());
+function save(){try{localStorage.setItem(K,JSON.stringify(data))}catch(e){}}
+function cost(e){return e.fuel+e.mt+e.ot}
+function prev(){const p=n('inc')-n('fuel')-n('mt')-n('ot');
+  $('pv').innerHTML=(n('inc')||n('fuel')||n('mt')||n('ot'))?'ກຳໄລສຸດທິ: <b class="'+(p>=0?'g':'r')+'">'+f(p)+'</b>':'';}
+['inc','fuel','mt','ot'].forEach(i=>$(i).addEventListener('input',prev));
+$('add').onclick=()=>{
+  if(!$('d').value||(!n('inc')&&!n('fuel')&&!n('mt')&&!n('ot')))return;
+  data.push({id:Date.now(),d:$('d').value,inc:n('inc'),ord:n('ord'),fuel:n('fuel'),km:n('km'),mt:n('mt'),ot:n('ot')});
+  save();['inc','ord','fuel','km','mt','ot'].forEach(i=>$(i).value='');prev();render();
+};
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+  per=b.dataset.p;document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));render();});
+function filt(){
+  const now=new Date(),t=iso(now);
+  return data.filter(e=>{
+    if(per==='all')return true;
+    if(per==='day')return e.d===t;
+    if(per==='week'){const s=new Date(now);s.setDate(s.getDate()-6);return e.d>=iso(s)&&e.d<=t}
+    return e.d.slice(0,7)===t.slice(0,7);
+  }).sort((a,b)=>b.d.localeCompare(a.d)||b.id-a.id);
+}
+const names={day:'ກຳໄລມື້ນີ້',week:'ກຳໄລ 7 ວັນ',month:'ກຳໄລເດືອນນີ້',all:'ກຳໄລທັງໝົດ'};
+function render(){
+  const L=filt();
+  const inc=L.reduce((s,e)=>s+e.inc,0),c=L.reduce((s,e)=>s+cost(e),0),o=L.reduce((s,e)=>s+e.ord,0),km=L.reduce((s,e)=>s+e.km,0);
+  const p=inc-c,days=new Set(L.map(e=>e.d)).size;
+  $('hl').textContent=names[per];$('hp').textContent=f(p);
+  $('hs').textContent=days?('ສະເລ່ຍ '+f(p/days)+' / ມື້ · '+days+' ມື້ເຮັດວຽກ'):'ຍັງບໍ່ມີຂໍ້ມູນ';
+  $('sum').innerHTML=
+   '<div><span class="m">ລາຍຮັບ</span><b class="g">'+f(inc)+'</b></div>'+
+   '<div><span class="m">ຕົ້ນທຶນລວມ</span><b class="r">'+f(c)+'</b></div>'+
+   '<div><span class="m">ອໍເດີ</span><b>'+o+(o?' <span class="m">('+f(p/o)+'/ອໍເດີ)</span>':'')+'</b></div>'+
+   '<div><span class="m">ໄລຍະທາງ</span><b>'+km.toFixed(1)+' ກມ'+(km?' <span class="m">('+f(p/km)+'/ກມ)</span>':'')+'</b></div>';
+  $('list').innerHTML=L.length?L.map(e=>{const pr=e.inc-cost(e);
+    return '<div class="it"><div class="t"><span>'+e.d+'</span><span class="'+(pr>=0?'g':'r')+'">'+f(pr)+'</span></div>'+
+    '<div class="m">ຮັບ '+f(e.inc)+' · ນ້ຳມັນ '+f(e.fuel)+(e.mt?' · ບຳລຸງ '+f(e.mt):'')+(e.ot?' · ອື່ນໆ '+f(e.ot):'')+(e.ord?' · '+e.ord+' ອໍເດີ':'')+(e.km?' · '+e.km+' ກມ':'')+'</div>'+
+    '<button class="x" onclick="del('+e.id+')">ລົບ</button></div>'}).join(''):'<p class="m">ຍັງບໍ່ມີລາຍການ</p>';
+}
+function del(id){if(!confirm('ລົບລາຍການນີ້?'))return;data=data.filter(e=>e.id!==id);save();render()}
+render();
+</script>
+</body>
+</html>
